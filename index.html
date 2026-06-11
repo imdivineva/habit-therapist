@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Habit Therapist</title>
+
+<style>
+body {
+    font-family: Arial;
+    margin: 0;
+    background: #f5f6fb;
+}
+
+header {
+    background: white;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+}
+
+.card {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    margin-bottom: 15px;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+button {
+    padding: 10px 14px;
+    border: none;
+    background: #222;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(250px,1fr));
+    gap: 15px;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    background: #eef2ff;
+    border-radius: 20px;
+    font-size: 12px;
+    margin-top: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>🧠 Habit Therapist</h1>
+<p>Your habits, patterns, and behaviour—understood, not judged.</p>
+</header>
+
+<div class="container">
+
+<div class="card">
+<h3>Add Habit Entry</h3>
+
+<input id="habit" placeholder="Habit (e.g. Gym)">
+<textarea id="note" placeholder="What happened today? (missed, completed, why?)"></textarea>
+
+<button onclick="addHabit()">Save Entry</button>
+</div>
+
+<div id="insight" class="card"></div>
+
+<div class="grid" id="list"></div>
+
+</div>
+
+<script>
+
+function getData(){
+return JSON.parse(localStorage.getItem("ht_data") || "[]");
+}
+
+function saveData(d){
+localStorage.setItem("ht_data", JSON.stringify(d));
+}
+
+function addHabit(){
+
+let data = getData();
+
+let habit = document.getElementById("habit").value;
+let note = document.getElementById("note").value;
+
+data.push({
+habit,
+note,
+date: new Date().toLocaleDateString()
+});
+
+saveData(data);
+
+document.getElementById("habit").value = "";
+document.getElementById("note").value = "";
+
+render();
+}
+
+function generateInsight(data){
+
+let missed = data.filter(d =>
+d.note.toLowerCase().includes("miss") ||
+d.note.toLowerCase().includes("skip")
+).length;
+
+let emotional = data.filter(d =>
+d.note.toLowerCase().includes("tired") ||
+d.note.toLowerCase().includes("stress")
+).length;
+
+if(data.length === 0){
+return "Start tracking your habits. I’ll help you see patterns over time.";
+}
+
+if(missed > emotional){
+return "You are not lazy. Your environment may be blocking consistency more than motivation.";
+}
+
+if(emotional > 0){
+return "Your habits are affected by emotional load. Recovery may matter more than discipline right now.";
+}
+
+return "You are building consistency. Keep going. Patterns are forming.";
+}
+
+function render(){
+
+let data = getData();
+
+document.getElementById("insight").innerHTML =
+`<h3>Therapist Insight</h3><p>${generateInsight(data)}</p>`;
+
+document.getElementById("list").innerHTML =
+data.map(d => `
+<div class="card">
+<h4>${d.habit}</h4>
+<div class="badge">${d.date}</div>
+<p>${d.note}</p>
+</div>
+`).join("");
+}
+
+render();
+
+</script>
+
+</body>
+</html>
